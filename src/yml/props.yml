@@ -1,0 +1,13 @@
+bit:
+  font_size: 72dp
+  font_family: DS-Digi
+  text_color: '#73ff38'
+
+inc_dec_btns:
+  text_color: '#4fa22c'
+
+const_indicator:
+  indicator_color: '#ff2a26'
+  indicator_size: 16dp
+  text_color: '#ffffff'
+  font_size: 15dp
