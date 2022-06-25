@@ -11,6 +11,7 @@ from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.core.text import LabelBase
+from kivy.core.window import Window
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.button import MDFillRoundFlatButton, MDRoundFlatButton, MDIconButton
@@ -60,6 +61,8 @@ class App(MDApp):
 
         self.layout.add_widget(ctrl)
         self.screen.add_widget(self.layout)
+
+        Window.size = (280, 320) #! hardcoded
     
     # ......................... #
 

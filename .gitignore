@@ -132,3 +132,7 @@ dmypy.json
 # util .py files
 
 *.utils.py
+
+# vscode stuff
+
+.vscode/

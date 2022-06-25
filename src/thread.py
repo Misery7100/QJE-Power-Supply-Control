@@ -3,6 +3,8 @@ import time
 from serial import Serial
 from threading import Thread
 
+from .controllers import qje
+
 # ------------------------- #
 
 class SerialHalfDuplex(Thread):
@@ -22,9 +24,9 @@ class SerialHalfDuplex(Thread):
     def get_status(self):
         self.instance.serial.reset_input_buffer()
         self.instance.serial.reset_output_buffer()
-        self.instance.serial.write('STATUS?\\n'.encode())
+        self.instance.serial.write(f'{qje.get_status}{qje.end_sym}'.encode())
         self.instance.serial.flush()
-        f = self.instance.serial.read(1)
+        f = self.instance.serial.read(2)
         self.instance.serial.flush()
         self.instance.serial.reset_input_buffer()
         self.instance.serial.reset_output_buffer()
@@ -55,17 +57,25 @@ class SerialHalfDuplex(Thread):
         else:
             self.instance.v_ctrl.const_indicator.indicator_on()
             self.instance.c_ctrl.const_indicator.indicator_off()
+        
+        # if f[1] == '0':
+        #     pass
+
+        # elif f[1] == '1':
+        #     pass
 
     # ......................... #
 
     def run(self):
         while 1:
-            time.sleep(0.05)
+            time.sleep(0.05) # TODO: move to threads params
 
             if self.instance.serial and not self.disconnected:
                 try:
                     self.instance.serial.inWaiting()
-                    self.update_constant_indicators()
+
+                    if not self.paused:
+                        self.update_constant_indicators()
 
                 except:
                     self.disconnected = True

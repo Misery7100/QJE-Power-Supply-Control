@@ -80,27 +80,20 @@ class ConstantIndicator(MDBoxLayout):
                 text=label,
                 theme_text_color="Custom",
                 text_color=global_props.const_indicator.text_color,
-                pos_hint={"center_x": 0.5, "center_y": 0.5},
-                #size_hint=(1, 0.4)
+                pos_hint={"center_x": 0.5, "center_y": 0.5}
             )
 
         self.indicator = MDIconButton(
                 icon='checkbox-blank-circle',
                 pos_hint={"center_x": 0.5, "center_y" : 0.5},
                 theme_text_color="Custom",
-                text_color=global_props.const_indicator.indicator_color_off,
-                #size_hint=(1, 1.5)
+                text_color=global_props.const_indicator.indicator_color_off
             )
 
         self.indicator_with_effects = EffectWidget()
         self.indicator_with_effects.add_widget(self.indicator)
-        self.indicator_with_effects.effects = [
-                # HorizontalBlurEffect(size=3.5), 
-                # VerticalBlurEffect(size=3.5),
-                # FXAAEffect()
-            ]
-        
-        #self.indicator.disabled = True
+        self.indicator_with_effects.effects = []
+
         self.label.font_size = global_props.const_indicator.font_size
         self.indicator.user_font_size = global_props.const_indicator.indicator_size
 
@@ -135,13 +128,15 @@ class SingleBitController(MDBoxLayout):
                 icon='chevron-up', 
                 pos_hint={"center_x": 0.5},
                 theme_text_color="Custom",
-                text_color=global_props.inc_dec_btns.text_color
+                text_color=global_props.inc_dec_btns.text_color,
+                ripple_scale=0.8
             )
         self.decrement = MDIconButton(
                 icon='chevron-down', 
                 pos_hint={"center_x": 0.5},
                 theme_text_color="Custom",
-                text_color=global_props.inc_dec_btns.text_color
+                text_color=global_props.inc_dec_btns.text_color,
+                ripple_scale=0.8
             )
         self.bit_field = MDLabel(
                 text='0',
@@ -163,12 +158,12 @@ class SingleBitController(MDBoxLayout):
     
     # ......................... #
 
-    def incrementation(self, *args, **kwargs):
+    def incrementation(self, *args):
         pass
 
     # ......................... #
 
-    def decrementation(self, *args, **kwargs):
+    def decrementation(self, *args):
         pass
 
 # ------------------------- #
