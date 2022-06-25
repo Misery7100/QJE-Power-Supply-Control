@@ -19,9 +19,12 @@ with open(os.path.join(BASE_DIR, 'yml/qje_protocol.yml'), 'r') as stream:
 with open(os.path.join(BASE_DIR, 'yml/threads.yml'), 'r') as stream:
     cfg = dotdict(yaml.load(stream, Loader=yaml.Loader))
 
+with open(os.path.join(BASE_DIR, 'yml/style.yml'), 'r') as stream:
+    style = dotdict(yaml.load(stream, Loader=yaml.Loader))
+
 # ------------------------- #
 
-class Backend:
+class Backend: # TODO: fix shit with disabled instances, fix thread (lost connection etc)
 
     max_voltage = 30.00
     max_current = 3.000
@@ -50,6 +53,10 @@ class Backend:
 
         self.app.title.text = self.port
         self.app.title.disabled = False
+
+        self.voltage_control.enable_digits()
+        self.current_control.enable_digits()
+        self.output_button.md_bg_color = style.output_btn.background_off
 
         self.reset() # reset output, current and voltage
         self.update_constant_indicators() # update cinds on init

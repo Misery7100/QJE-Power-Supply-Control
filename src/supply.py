@@ -56,65 +56,6 @@ class PowerSupplyWidget(MDBoxLayout):
 
         self.add_widget(self.ctrl_layout)
 
-# ------------------------- #
-# ------------------------- #
-# ------------------------- #
-# ------------------------- #
-
-class PowerSupplyControl(MDBoxLayout):
-
-    def __init__(self, port, **kwargs):
-        super().__init__(**kwargs)
-
-        self.orientation = 'vertical'
-
-        self.ctrl_layout = MDBoxLayout(orientation='vertical')
-        self.ctrl_layout.padding = 10
-        self.ctrl_layout.spacing = 10
-        self.ctrl_layout.md_bg_color = (0, 0, 0, 0.4) #! hardcoded shit
-
-        self.port = port
-        self.output_status = 0
-
-        self.title = MDLabel(
-                text=port, 
-                size_hint_y=0.1,
-                halign='center',
-                theme_text_color="Custom",
-                text_color="#dcdcdc",
-            )
-
-        self.output_button = OutputButton(instance=self)
-        #self.v_ctrl = VoltageController(instance=self)
-        #self.c_ctrl = CurrentController(instance=self)
-
-        self.ctrl_layout.add_widget(self.title)
-        self.ctrl_layout.add_widget(self.v_ctrl)
-        self.ctrl_layout.add_widget(self.c_ctrl)
-        self.ctrl_layout.add_widget(self.output_button)
-
-        self.add_widget(self.ctrl_layout)
-
-        self.initialize_connection()
-
-        self.thread = SerialHalfDuplex(instance=self)
-
-        self.reset()
-        self.thread.update_constant_indicators()
-        self.thread.start()
-        
-    # ......................... #
-
-    def reset(self):
-        self.output_button.set_output_while(0)
-        time.sleep(0.1)
-        self.v_ctrl.change('00.00')
-        time.sleep(0.1)
-        self.c_ctrl.change('0.000')
-    
-    # ......................... #
-    
-    def initialize_connection(self):
-        self.serial = Serial(self.port)
-
-# ------------------------- #
+        self.v_ctrl.disable_digits()
+        self.c_ctrl.disable_digits()
+        self.output_button.md_bg_color = style.const_indicator.indicator_color_off

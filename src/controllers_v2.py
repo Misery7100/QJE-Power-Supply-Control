@@ -206,6 +206,26 @@ class UniversalCtrlWidget(MDBoxLayout):
 
         for i, sym in enumerate(value.replace('.', '')):
             self.bits[i].bit_field.text = sym
+    
+    # ......................... #
+
+    def disable_digits(self):
+        for bit in self.bits:
+            bit.bit_field.disabled = True
+            bit.increment.text_color = "#000000"
+            bit.decrement.text_color = "#000000"
+        
+        self.float_point.disabled = True
+        
+    # ......................... #
+
+    def enable_digits(self):
+        for bit in self.bits:
+            bit.bit_field.disabled = False
+            bit.increment.text_color = style.inc_dec_btns.text_color
+            bit.decrement.text_color = style.inc_dec_btns.text_color
+        
+        self.float_point.disabled = False
 
 # ------------------------- #
 

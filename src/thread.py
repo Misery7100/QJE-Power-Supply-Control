@@ -22,7 +22,7 @@ with open(os.path.join(BASE_DIR, 'yml/threads.yml'), 'r') as stream:
 
 # ------------------------- #
 
-class SerialHalfDuplexV2(Thread):
+class SerialHalfDuplexV2(Thread): # TODO: fix shit with disabled instances, fix thread (lost connection etc)
 
     def __init__(self, backend, **kwargs) -> None:
 

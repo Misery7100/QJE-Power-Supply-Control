@@ -8,7 +8,7 @@ inc_dec_btns:
 
 const_indicator:
   indicator_color_on: '#ff2a26'
-  indicator_color_off: '#232323'
+  indicator_color_off: '#010101'
   indicator_size: 16dp
   text_color: '#ffffff'
   font_size: 14dp
