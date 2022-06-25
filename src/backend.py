@@ -49,6 +49,7 @@ class Backend:
         self.thread = SerialHalfDuplexV2(backend=self)
 
         self.app.title.text = self.port
+        self.app.title.disabled = False
 
         self.reset() # reset output, current and voltage
         self.update_constant_indicators() # update cinds on init

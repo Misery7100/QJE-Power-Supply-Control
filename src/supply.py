@@ -33,16 +33,17 @@ class PowerSupplyWidget(MDBoxLayout):
         self.ctrl_layout.spacing = 10
         self.ctrl_layout.md_bg_color = (69 / 255, 69 / 255, 69 / 255, 1) #! hardcoded shit
 
-        self.ctrl_layout.line_color = (135 / 255, 135 / 255, 135 / 255, 1) #! hardcoded shit
-        self.ctrl_layout.line_width = 5 #! hardcoded shit
+        #self.ctrl_layout.line_color = (135 / 255, 135 / 255, 135 / 255, 1) #! hardcoded shit
+        #self.ctrl_layout.line_width = 5 #! hardcoded shit
 
         self.title = MDLabel(
-                text='Sample title', 
+                text='No PSU', 
                 size_hint_y=0.1,
                 halign='center',
                 theme_text_color="Custom",
                 text_color="#dcdcdc", #! hardcoded shit
             )
+        self.title.disabled = True
         
         self.output_button = OutputButton()
         self.v_ctrl = VoltageCtrlWidget()

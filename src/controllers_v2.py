@@ -246,8 +246,6 @@ class OutputButton(MDFillRoundFlatButton):
         super().__init__(**kwargs)
 
         self.md_bg_color = style.output_btn.background_off
-        self.line_color = style.output_btn.line_color
-        self.line_width = style.output_btn.line_width
         self.value = 0
 
         self.bind(on_press=self.toggle_output_color)
