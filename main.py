@@ -50,8 +50,8 @@ class App(MDApp):
 
         self.screen = MDScreen()
         self.grid = MDBoxLayout(orientation='vertical')
-        self.grid.spacing = 2
-        self.grid.md_bg_color = (135 / 255, 135 / 255, 135 / 255, 1)
+        self.grid.spacing = 3
+        self.grid.md_bg_color = (35 / 255, 35 / 255, 35 / 255, 1)
 
         ports = parse_ports()
         psu_widgets = []
@@ -69,7 +69,7 @@ class App(MDApp):
         for i in range(0, len(psu_widgets), cols):
 
             row = MDBoxLayout(orientation='horizontal')
-            row.spacing = 2
+            row.spacing = 3
             num_rows += 1
             
             for j in range(cols):
