@@ -22,10 +22,9 @@ from kivymd.uix.label import MDLabel
 from kivymd.uix.behaviors.magic_behavior import MagicBehavior
 from kivymd.uix.screen import MDScreen
 from pathlib import Path
-from serial import Serial
-from threading import Thread
 
-from src.controllers import UniversalController
+from src.supply import PowerSupplyControl
+from src.serial import parse_ports
 
 # ------------------------- #
 
@@ -50,11 +49,16 @@ class App(MDApp):
         self.screen = MDScreen()
         self.layout = MDBoxLayout(orientation='vertical')
 
-        ctrl1 = UniversalController(point_pos=1, height=160, width=250, size_hint=(None, None))
-        ctrl2 = UniversalController(point_pos=2, height=160, width=250, size_hint=(None, None))
+        ports = parse_ports()
 
-        self.layout.add_widget(ctrl1)
-        self.layout.add_widget(ctrl2)
+        ctrl = PowerSupplyControl(
+            height=320,
+            width=280, 
+            size_hint=(None, None),
+            port=ports[0]
+        )
+
+        self.layout.add_widget(ctrl)
         self.screen.add_widget(self.layout)
     
     # ......................... #

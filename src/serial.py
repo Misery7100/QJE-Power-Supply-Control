@@ -1,8 +1,6 @@
 import re
 import serial.tools.list_ports as list_ports
 
-from serial import Serial
-
 # ------------------------- #
 
 def parse_ports():

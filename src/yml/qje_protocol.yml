@@ -1,0 +1,8 @@
+voltage_set: 'VSET1:'
+current_set: 'ISET1:'
+get_output: 'OUTPUT'
+voltage_get: 'VOUT1?'
+current_get: 'IOUT1?'
+voltage_check: 'VSET1?'
+current_check: 'ISET1?'
+end_sym: '\\n'

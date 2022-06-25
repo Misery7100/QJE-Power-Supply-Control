@@ -31,6 +31,9 @@ BASE_DIR = Path(__file__).resolve().parent
 with open(os.path.join(BASE_DIR, 'yml/props.yml'), 'r') as stream:
     global_props = dotdict(yaml.safe_load(stream))
 
+with open(os.path.join(BASE_DIR, 'yml/qje_protocol.yml'), 'r') as stream:
+    qje = dotdict(yaml.safe_load(stream))
+
 # ------------------------- #
 
 class UnitIndicator(MDBoxLayout):
@@ -85,7 +88,7 @@ class ConstantIndicator(MDBoxLayout):
                 icon='checkbox-blank-circle',
                 pos_hint={"center_x": 0.5, "center_y" : 0.5},
                 theme_text_color="Custom",
-                text_color=global_props.const_indicator.indicator_color,
+                text_color=global_props.const_indicator.indicator_color_off,
                 #size_hint=(1, 1.5)
             )
 
@@ -106,6 +109,16 @@ class ConstantIndicator(MDBoxLayout):
         self.add_widget(self.empty_box1)
         self.add_widget(self.box)
         self.add_widget(self.empty_box2)
+    
+    # ......................... #
+    
+    def indicator_on(self):
+        self.indicator.text_color = global_props.const_indicator.indicator_color_on
+    
+    # ......................... #
+
+    def indicator_off(self):
+        self.indicator.text_color = global_props.const_indicator.indicator_color_off
 
 # ------------------------- #
 
@@ -167,20 +180,31 @@ class UniversalController(MDBoxLayout):
     # ......................... #
 
     def __init__(
-            self, 
+            self,
+            instance, 
             bits: int = 4, 
             point_pos: int = None,
             const_indicator_label: str = "C. #", 
             unit_indicator_label: str = "A",
+            change_command: str = None,
+            get_command: str = None,
+            check_command: str = None,
             **kwargs
         ):
 
         super().__init__(**kwargs)
 
+        self.instance = instance
+        self.change_command = change_command
+        self.get_command = get_command
+        self.check_command = check_command
+
         self.orientation = 'horizontal'
         self.md_bg_color = (0, 0, 0, 0.9)
+        self.line_color = (0, 0, 0, 0.7)
+        self.line_width = 2
 
-        self.const_indicator = ConstantIndicator(label=const_indicator_label)
+        self.const_indicator = ConstantIndicator(label=const_indicator_label, size_hint_x=0.8)
         self.unit_indicator = UnitIndicator(label=unit_indicator_label)
 
         self.add_widget(self.const_indicator)
@@ -209,20 +233,83 @@ class UniversalController(MDBoxLayout):
     
     # ......................... #
 
+    def change(self, value):
 
+        if self.change_command:
+            self.instance.thread.paused = True
+            self.instance.serial.write(f'{self.change_command}{value}{qje.end_sym}'.encode())
+            self.instance.serial.flush()
+            self.instance.serial.reset_input_buffer()
+            self.instance.serial.reset_output_buffer()
+            self.instance.thread.paused = False
+        
+        else:
+            raise ValueError('change_command is empty')
+    
+    # ......................... #
+
+    def get(self):
+
+        if self.get_command:
+            self.instance.serial.write(f'{self.get_command}{qje.end_sym}'.encode())
+            self.instance.serial.flush()
+            f = self.instance.serial.read(6)
+            self.instance.serial.flush()
+            self.instance.serial.reset_input_buffer()
+            self.instance.serial.reset_output_buffer()
+
+            return f
+
+        else:
+            raise ValueError('get_command is empty')
+    
+    # ......................... #
+
+    def check(self):
+
+        if self.check_command:
+            self.instance.serial.write(f'{self.check_command}{qje.end_sym}'.encode())
+            self.instance.serial.flush()
+            f = self.instance.serial.read(6)
+            self.instance.serial.flush()
+            self.instance.serial.reset_input_buffer()
+            self.instance.serial.reset_output_buffer()
+
+            return f
+            
+        else:
+            raise ValueError('check_command is empty')
 
 # ------------------------- #
 
 class CurrentController(UniversalController):
 
     def __init__(self, **kwargs):
+        kwargs.update(dict(
+            point_pos=1,
+            const_indicator_label="C.C", 
+            unit_indicator_label="A",
+            change_command=qje.current_set,
+            get_command=qje.current_get,
+            check_command=qje.current_check
+        ))
         super().__init__(**kwargs)
+    
+    # ......................... #
 
 # ------------------------- #
 
 class VoltageController(UniversalController):
 
     def __init__(self, **kwargs):
+        kwargs.update(dict(
+            point_pos=2,
+            const_indicator_label="C.V", 
+            unit_indicator_label="V",
+            change_command=qje.voltage_set,
+            get_command=qje.voltage_get,
+            check_command=qje.voltage_check
+        ))
         super().__init__(**kwargs)
 
 # ------------------------- #
