@@ -24,8 +24,9 @@ from kivymd.uix.behaviors.magic_behavior import MagicBehavior
 from kivymd.uix.screen import MDScreen
 from pathlib import Path
 
-from src.supply import PowerSupplyControl
+from src.supply import *
 from src.serial import parse_ports
+from src.backend import Backend
 
 # ------------------------- #
 
@@ -44,25 +45,43 @@ class App(MDApp):
 
     # ......................... #
 
-    def __init__(self, **kwargs):
+    def __init__(self, cols: int = 3, **kwargs):
         super().__init__(**kwargs)
 
         self.screen = MDScreen()
-        self.layout = MDBoxLayout(orientation='vertical')
+        self.grid = MDBoxLayout(orientation='vertical')
+
+        self.grid.md_bg_color = (69 / 255, 69 / 255, 69 / 255, 1)
 
         ports = parse_ports()
+        psu_widgets = []
 
-        ctrl = PowerSupplyControl(
-            height=320,
-            width=280, 
-            size_hint=(None, None),
-            port=ports[0]
-        )
+        for i in range(4):
+            ctrl = PowerSupplyWidget(
+                height=350,
+                width=280, 
+                size_hint=(None, None)
+            )
+            psu_widgets.append(ctrl)
 
-        self.layout.add_widget(ctrl)
-        self.screen.add_widget(self.layout)
+        num_rows = 0
+        
+        for i in range(0, len(psu_widgets), cols):
 
-        Window.size = (280, 320) #! hardcoded
+            row = MDBoxLayout(orientation='horizontal')
+            num_rows += 1
+            
+            for j in range(cols):
+                if i + j < len(psu_widgets):
+                    row.add_widget(psu_widgets[i + j])
+
+            self.grid.add_widget(row)
+
+        bnd = Backend(psu_widgets[0], port=ports[0])
+
+        self.screen.add_widget(self.grid)
+
+        Window.size = (280 * cols, 350 * num_rows) #! hardcoded
     
     # ......................... #
 

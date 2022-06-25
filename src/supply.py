@@ -16,9 +16,48 @@ from kivymd.uix.screen import MDScreen
 
 from serial import Serial
 
-from .controllers import *
+from .controllers_v2 import *
 from .thread import SerialHalfDuplex
 
+# ------------------------- #
+
+class PowerSupplyWidget(MDBoxLayout):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.orientation = 'vertical'
+
+        self.ctrl_layout = MDBoxLayout(orientation='vertical')
+        self.ctrl_layout.padding = 10
+        self.ctrl_layout.spacing = 10
+        self.ctrl_layout.md_bg_color = (69 / 255, 69 / 255, 69 / 255, 1) #! hardcoded shit
+
+        self.ctrl_layout.line_color = (135 / 255, 135 / 255, 135 / 255, 1) #! hardcoded shit
+        self.ctrl_layout.line_width = 5 #! hardcoded shit
+
+        self.title = MDLabel(
+                text='Sample title', 
+                size_hint_y=0.1,
+                halign='center',
+                theme_text_color="Custom",
+                text_color="#dcdcdc", #! hardcoded shit
+            )
+        
+        self.output_button = OutputButton()
+        self.v_ctrl = VoltageCtrlWidget()
+        self.c_ctrl = CurrentCtrlWidget()
+
+        self.ctrl_layout.add_widget(self.title)
+        self.ctrl_layout.add_widget(self.v_ctrl)
+        self.ctrl_layout.add_widget(self.c_ctrl)
+        self.ctrl_layout.add_widget(self.output_button)
+
+        self.add_widget(self.ctrl_layout)
+
+# ------------------------- #
+# ------------------------- #
+# ------------------------- #
 # ------------------------- #
 
 class PowerSupplyControl(MDBoxLayout):
@@ -31,7 +70,7 @@ class PowerSupplyControl(MDBoxLayout):
         self.ctrl_layout = MDBoxLayout(orientation='vertical')
         self.ctrl_layout.padding = 10
         self.ctrl_layout.spacing = 10
-        self.ctrl_layout.md_bg_color = (0, 0, 0, 0.4)
+        self.ctrl_layout.md_bg_color = (0, 0, 0, 0.4) #! hardcoded shit
 
         self.port = port
         self.output_status = 0
@@ -44,21 +83,9 @@ class PowerSupplyControl(MDBoxLayout):
                 text_color="#dcdcdc",
             )
 
-        self.output_button = MDFillRoundFlatButton(
-                text='OUTPUT', 
-                size_hint_y=0.1,
-                theme_text_color="Custom",
-                text_color="#111111",
-                ripple_scale=0
-            )
-        
-        self.output_button.md_bg_color = "#787878" #! hardcoded shit
-        self.output_button.line_color = "#434343" #! hardcoded shit
-        self.output_button.line_width = 3
-        self.output_button.bind(on_press=self.toggle_output)
-
-        self.v_ctrl = VoltageController(instance=self)
-        self.c_ctrl = CurrentController(instance=self)
+        self.output_button = OutputButton(instance=self)
+        #self.v_ctrl = VoltageController(instance=self)
+        #self.c_ctrl = CurrentController(instance=self)
 
         self.ctrl_layout.add_widget(self.title)
         self.ctrl_layout.add_widget(self.v_ctrl)
@@ -68,41 +95,21 @@ class PowerSupplyControl(MDBoxLayout):
         self.add_widget(self.ctrl_layout)
 
         self.initialize_connection()
+
         self.thread = SerialHalfDuplex(instance=self)
+
+        self.reset()
+        self.thread.update_constant_indicators()
         self.thread.start()
-    
+        
     # ......................... #
 
-    def toggle_output(self, *args): # TODO: move into separate class named OutputButton mb
-
-        self.thread.paused = True
-        self.serial.reset_input_buffer()
-        self.serial.reset_output_buffer()
-
-        self.output_status = (self.output_status + 1) % 2
-
-        status = self.thread.get_status()
-
-        while status[-1] != str(self.output_status):
-
-            time.sleep(0.08) # TODO: move to threads params
-            self.serial.write(f'{qje.set_output}{self.output_status}{qje.end_sym}'.encode())
-            self.serial.flush()
-            self.serial.reset_input_buffer()
-            self.serial.reset_output_buffer()
-            time.sleep(0.08)
-            status = self.thread.get_status()
-
-        self.toggle_output_color()
-        self.thread.paused = False
-
-    # ......................... #
-
-    # ......................... #
-
-    def toggle_output_color(self, *args): # TODO: move into separate class named OutputButton mb
-        colors = ["#787878", "#ff8400"]
-        self.output_button.md_bg_color = colors[self.output_status]
+    def reset(self):
+        self.output_button.set_output_while(0)
+        time.sleep(0.1)
+        self.v_ctrl.change('00.00')
+        time.sleep(0.1)
+        self.c_ctrl.change('0.000')
     
     # ......................... #
     

@@ -20,7 +20,6 @@ from kivymd.uix.label import MDLabel
 from kivymd.uix.behaviors.magic_behavior import MagicBehavior
 from kivymd.uix.screen import MDScreen
 from pathlib import Path
-from serial import Serial
 
 from .utils import dotdict
 
@@ -28,11 +27,8 @@ from .utils import dotdict
 
 BASE_DIR = Path(__file__).resolve().parent
 
-with open(os.path.join(BASE_DIR, 'yml/props.yml'), 'r') as stream:
-    global_props = dotdict(yaml.safe_load(stream))
-
-with open(os.path.join(BASE_DIR, 'yml/qje_protocol.yml'), 'r') as stream:
-    qje = dotdict(yaml.safe_load(stream))
+with open(os.path.join(BASE_DIR, 'yml/style.yml'), 'r') as stream:
+    style = dotdict(yaml.load(stream, Loader=yaml.Loader))
 
 # ------------------------- #
 
@@ -52,9 +48,11 @@ class UnitIndicator(MDBoxLayout):
         self.label = MDLabel(
                 text=label,
                 theme_text_color="Custom",
-                text_color=global_props.const_indicator.text_color,
+                text_color=style.unit_indicator.text_color,
                 pos_hint={"center_x": 0.6, "center_y": 0.3}
             )
+        
+        self.label.font_size = style.unit_indicator.font_size
         
         self.box.add_widget(self.label)
         self.add_widget(self.empty_box1)
@@ -73,13 +71,13 @@ class ConstantIndicator(MDBoxLayout):
         self.padding = 5
 
         self.box = MDBoxLayout(size_hint_y=0.4, orientation='vertical')
-        self.empty_box1 = MDBoxLayout(size_hint_y=0.2, orientation='vertical')
-        self.empty_box2 = MDBoxLayout(size_hint_y=0.4, orientation='vertical')
+        self.empty_box1 = MDBoxLayout(size_hint_y=0.25, orientation='vertical')
+        self.empty_box2 = MDBoxLayout(size_hint_y=0.35, orientation='vertical')
 
         self.label = MDLabel(
                 text=label,
                 theme_text_color="Custom",
-                text_color=global_props.const_indicator.text_color,
+                text_color=style.const_indicator.text_color,
                 pos_hint={"center_x": 0.5, "center_y": 0.5}
             )
 
@@ -87,18 +85,17 @@ class ConstantIndicator(MDBoxLayout):
                 icon='checkbox-blank-circle',
                 pos_hint={"center_x": 0.5, "center_y" : 0.5},
                 theme_text_color="Custom",
-                text_color=global_props.const_indicator.indicator_color_off
+                text_color=style.const_indicator.indicator_color_off,
+                ripple_scale=0
             )
 
-        self.indicator_with_effects = EffectWidget()
-        self.indicator_with_effects.add_widget(self.indicator)
-        self.indicator_with_effects.effects = []
-
-        self.label.font_size = global_props.const_indicator.font_size
-        self.indicator.user_font_size = global_props.const_indicator.indicator_size
+        self.label.font_size = style.const_indicator.font_size
+        self.indicator.user_font_size = style.const_indicator.indicator_size
+        self.indicator.line_color = style.const_indicator.indicator_color_off
 
         self.box.add_widget(self.label)
-        self.box.add_widget(self.indicator_with_effects)
+        self.box.add_widget(self.indicator)
+
         self.add_widget(self.empty_box1)
         self.add_widget(self.box)
         self.add_widget(self.empty_box2)
@@ -106,16 +103,16 @@ class ConstantIndicator(MDBoxLayout):
     # ......................... #
     
     def indicator_on(self):
-        self.indicator.text_color = global_props.const_indicator.indicator_color_on
+        self.indicator.text_color = style.const_indicator.indicator_color_on
     
     # ......................... #
 
     def indicator_off(self):
-        self.indicator.text_color = global_props.const_indicator.indicator_color_off
+        self.indicator.text_color = style.const_indicator.indicator_color_off
 
 # ------------------------- #
 
-class SingleBitController(MDBoxLayout):
+class SingleBitCtrlWidget(MDBoxLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -128,14 +125,14 @@ class SingleBitController(MDBoxLayout):
                 icon='chevron-up', 
                 pos_hint={"center_x": 0.5},
                 theme_text_color="Custom",
-                text_color=global_props.inc_dec_btns.text_color,
+                text_color=style.inc_dec_btns.text_color,
                 ripple_scale=0.8
             )
         self.decrement = MDIconButton(
                 icon='chevron-down', 
                 pos_hint={"center_x": 0.5},
                 theme_text_color="Custom",
-                text_color=global_props.inc_dec_btns.text_color,
+                text_color=style.inc_dec_btns.text_color,
                 ripple_scale=0.8
             )
         self.bit_field = MDLabel(
@@ -143,61 +140,38 @@ class SingleBitController(MDBoxLayout):
                 halign='center',
                 pos_hint={"center_x": 0.5},
                 theme_text_color="Custom",
-                text_color=global_props.bit.text_color
+                text_color=style.bit.text_color
             )
 
-        self.bit_field.font_size = global_props.bit.font_size
-        self.bit_field.font_name = global_props.bit.font_family
-
-        self.increment.bind(on_press=self.incrementation) # ? use partial further ? #
-        self.decrement.bind(on_press=self.decrementation) # ? use partial further ? #
+        self.bit_field.font_size = style.bit.font_size
+        self.bit_field.font_name = style.bit.font_family
 
         self.add_widget(self.increment)
         self.add_widget(self.bit_field)
         self.add_widget(self.decrement)
-    
-    # ......................... #
-
-    def incrementation(self, *args):
-        pass
-
-    # ......................... #
-
-    def decrementation(self, *args):
-        pass
 
 # ------------------------- #
 
-class UniversalController(MDBoxLayout):
-
-    bits = list()
-
-    # ......................... #
+class UniversalCtrlWidget(MDBoxLayout):
 
     def __init__(
             self,
-            instance, 
             bits: int = 4, 
             point_pos: int = None,
             const_indicator_label: str = "C. #", 
             unit_indicator_label: str = "A",
-            change_command: str = None,
-            get_command: str = None,
-            check_command: str = None,
             **kwargs
         ):
 
         super().__init__(**kwargs)
 
-        self.instance = instance
-        self.change_command = change_command
-        self.get_command = get_command
-        self.check_command = check_command
-
         self.orientation = 'horizontal'
-        self.md_bg_color = (0, 0, 0, 0.9)
-        self.line_color = (0, 0, 0, 0.7)
-        self.line_width = 2
+        self.bits = []
+        self.point_pos = point_pos
+
+        self.md_bg_color = style.universal_ctrl.background
+        self.line_color = style.universal_ctrl.line_color
+        self.line_width = style.universal_ctrl.line_width
 
         self.const_indicator = ConstantIndicator(label=const_indicator_label, size_hint_x=0.8)
         self.unit_indicator = UnitIndicator(label=unit_indicator_label)
@@ -209,102 +183,80 @@ class UniversalController(MDBoxLayout):
             pos_hint={"center_x": 0.5},
             halign='center',
             theme_text_color="Custom",
-            text_color=global_props.bit.text_color,
+            text_color=style.bit.text_color,
             size_hint_x=0.1
         )
 
-        self.float_point.font_size = global_props.bit.font_size
-        self.float_point.font_name = global_props.bit.font_family
+        self.float_point.font_size = style.bit.font_size
+        self.float_point.font_name = style.bit.font_family
 
         for i in range(bits):
-            if point_pos == i:
+            if self.point_pos == i:
                 self.add_widget(self.float_point)
 
-            dbc = SingleBitController(pos_hint={"center_y": 0.5}, width=80)
+            dbc = SingleBitCtrlWidget(pos_hint={"center_y": 0.5}, width=80)
             self.bits.append(dbc)
-            self.add_widget(dbc)
+            self.add_widget(self.bits[i])
         
         self.add_widget(self.unit_indicator)
     
     # ......................... #
 
-    def change(self, value):
+    def set_value(self, value: str):
 
-        if self.change_command:
-            self.instance.thread.paused = True
-            self.instance.serial.write(f'{self.change_command}{value}{qje.end_sym}'.encode())
-            self.instance.serial.flush()
-            self.instance.serial.reset_input_buffer()
-            self.instance.serial.reset_output_buffer()
-            self.instance.thread.paused = False
-        
-        else:
-            raise ValueError('change_command is empty')
-    
-    # ......................... #
-
-    def get(self):
-
-        if self.get_command:
-            self.instance.serial.write(f'{self.get_command}{qje.end_sym}'.encode())
-            self.instance.serial.flush()
-            f = self.instance.serial.read(6)
-            self.instance.serial.flush()
-            self.instance.serial.reset_input_buffer()
-            self.instance.serial.reset_output_buffer()
-
-            return f
-
-        else:
-            raise ValueError('get_command is empty')
-    
-    # ......................... #
-
-    def check(self):
-
-        if self.check_command:
-            self.instance.serial.write(f'{self.check_command}{qje.end_sym}'.encode())
-            self.instance.serial.flush()
-            f = self.instance.serial.read(6)
-            self.instance.serial.flush()
-            self.instance.serial.reset_input_buffer()
-            self.instance.serial.reset_output_buffer()
-
-            return f
-            
-        else:
-            raise ValueError('check_command is empty')
+        for i, sym in enumerate(value.replace('.', '')):
+            self.bits[i].bit_field.text = sym
 
 # ------------------------- #
 
-class CurrentController(UniversalController):
+class CurrentCtrlWidget(UniversalCtrlWidget):
 
     def __init__(self, **kwargs):
         kwargs.update(dict(
             point_pos=1,
             const_indicator_label="C.C", 
-            unit_indicator_label="A",
-            change_command=qje.current_set,
-            get_command=qje.current_get,
-            check_command=qje.current_check
+            unit_indicator_label="A"
         ))
         super().__init__(**kwargs)
-    
-    # ......................... #
 
 # ------------------------- #
 
-class VoltageController(UniversalController):
+class VoltageCtrlWidget(UniversalCtrlWidget):
 
     def __init__(self, **kwargs):
         kwargs.update(dict(
             point_pos=2,
             const_indicator_label="C.V", 
-            unit_indicator_label="V",
-            change_command=qje.voltage_set,
-            get_command=qje.voltage_get,
-            check_command=qje.voltage_check
+            unit_indicator_label="V"
         ))
         super().__init__(**kwargs)
+
+# ------------------------- #
+
+class OutputButton(MDFillRoundFlatButton):
+
+    def __init__(self, **kwargs):
+        kwargs.update(dict(
+            text='OUTPUT', 
+            size_hint_y=0.1,
+            theme_text_color="Custom",
+            text_color=style.output_btn.text_color,
+            ripple_scale=0
+        ))
+        super().__init__(**kwargs)
+
+        self.md_bg_color = style.output_btn.background_off
+        self.line_color = style.output_btn.line_color
+        self.line_width = style.output_btn.line_width
+        self.value = 0
+
+        self.bind(on_press=self.toggle_output_color)
+
+    # ......................... #
+
+    def toggle_output_color(self, *args):
+        colors = [style.output_btn.background_off, style.output_btn.background_on]
+        self.value = (self.value + 1) % 2
+        self.md_bg_color = colors[self.value]
 
 # ------------------------- #

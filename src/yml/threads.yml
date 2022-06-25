@@ -1,1 +1,5 @@
-#
+timeouts:
+  output_while: 0.2
+  global_thread: 0.06
+  in_step: 0.06
+  write_read: 0.03
