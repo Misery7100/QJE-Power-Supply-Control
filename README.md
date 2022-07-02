@@ -20,5 +20,5 @@ Cross-platform app for control QJ300xP power supplies by QJE
 | VSET1?        | Get set voltage                                                                                                                                                                        |
 | ISET1?        | Get set current                                                                                                                                                                        |
 | STATUS?       | Get current status in format `xxx` where  `0xx` corresponds to constant current,  `1xx` -- constant voltage, `x0x` -- enabled output,  `x1x` -- disabled output (`x` means `0` or `1`) |
-| OUTPUTx     | Enable (`x=1`) or disable (`x=0`) PSU output                                                                                                                                           |
+| OUTPUTx     | `x = 1` -- enable, `x = 0` -- disabled PSU output output                                                                                                                                           |
 | \n            | End symbol for any command                                                                                                                                                             |
