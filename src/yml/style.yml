@@ -1,11 +1,14 @@
+# bit field
 bit:
   font_size: 72dp
   font_family: DS-Digi
   text_color: '#73ff38'
 
+# increment and decrement buttons for bit
 inc_dec_btns:
   text_color: '#4fa22c'
 
+# constant C.V/C.C indicator
 const_indicator:
   indicator_color_on: '#ff2a26'
   indicator_color_off: '#010101'
@@ -13,15 +16,18 @@ const_indicator:
   text_color: '#ffffff'
   font_size: 14dp
 
+# unit label V/A
 unit_indicator:
   text_color: '#ffffff'
   font_size: 20dp
 
+# value control template
 universal_ctrl:
   background: !!python/tuple [0.004, 0.057, 0.022, 0.95]
   line_color: !!python/tuple [0, 0, 0, 0.7]
   line_width: 5
 
+# output button
 output_btn:
   text_color: '#111111'
   background_off: "#787878"
@@ -31,6 +37,15 @@ output_btn:
   line_color: "#434343"
   line_width: 3
 
+# single psu widget
 psu_widget:
   text_color: "#dcdcdc"
   text_color_disabled: "#262626"
+  background: !!python/tuple [0.27, 0.27, 0.27, 1]
+  spacing: 10
+  padding: 10
+
+main_app:
+  color_palette: "Green"
+  grid_spacing: 3
+  grid_background: !!python/tuple [0.137, 0.137, 0.137, 1]

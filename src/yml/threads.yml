@@ -1,5 +1,11 @@
 timeouts:
+  # timeout on "OUTPUT" press 
+  # should be more than 0.2 s due PSU nature
   output_while: 0.22
+
+  # psu read polling rate
   global_thread: 0.06
   in_step: 0.06
-  write_read: 0.03
+
+  # psu capture polling rate
+  psu_capture: 1

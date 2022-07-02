@@ -1,64 +1,61 @@
 import os
 os.environ['KIVY_IMAGE'] = 'pil'
 
-# ------------------------- #
-
 from kivy.config import Config
 Config.set('graphics', 'resizable', False)
 
+# ------------------------- #
+
 from kivy.properties import ObjectProperty
-from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFillRoundFlatButton
-from pathlib import Path
 
 from src.supply import *
+from src.utils import *
 from src.backend import AppBackend
 
 # ------------------------- #
 
-BASE_DIR = Path(__file__).resolve().parent
-
-LabelBase.register(
-    name='DS-Digi',
-    fn_regular=os.path.join(BASE_DIR, 'src/fonts/DS-DIGI.TTF')
-)
-
-# ------------------------- #
-
 class App(MDApp):
-
-    in_class = ObjectProperty(None)
+    """
+    Cross-platform app for control QJ300xP power supplies by QJE.
+    """
 
     # ......................... #
 
     def __init__(self, cols: int = 3, **kwargs):
+
         super().__init__(**kwargs)
 
-        self.theme_cls.primary_palette = "Green"
-
-        self.screen = MDScreen()
-        self.grid = MDBoxLayout(orientation='vertical')
-        self.grid.spacing = 3 #! hardcoded
-        self.grid.md_bg_color = (35 / 255, 35 / 255, 35 / 255, 1) #! hardcoded
-
-        self.app_backend = AppBackend(app=self)
         self.psu_widgets = dict()
         self.backends = dict()
         self.dialog = None
 
+        # set main color palette
+        self.theme_cls.primary_palette = style.main_app.color_palette
+
+        # init screen and grid
+        self.screen = MDScreen()
+        self.grid = MDBoxLayout(orientation='vertical')
+        self.grid.spacing = style.main_app.grid_spacing
+        self.grid.md_bg_color = style.main_app.grid_background
+
+        # init app backend and check are there connected PSUs
+        self.app_backend = AppBackend(app=self)
         connected = self.app_backend.check_initial_connection()
 
+        # show alert if no PSUs found
         if not connected:
             Window.size = (280, 350)
             self.show_alert_dialog()
 
+        # build app screen according to number of found PSUs
         else:
-            self.app_backend.build_app_screen() 
+            self.app_backend.build_app_screen(num_cols=cols) 
             self.app_backend.start()
     
     # ......................... #
@@ -69,14 +66,24 @@ class App(MDApp):
     # ......................... #
 
     def reset_backends(self, *args):
+        """
+        Reset voltage, current to zero and disable output
+        for all available PSUs, before exit.
+        """
 
-        # reset only available psus
-        available_backends = list(filter(lambda x: x.port in self.app_backend.working, self.backends.values()))
+        available_backends = list(filter(
+            lambda x: x.port in self.app_backend.working, 
+            self.backends.values()
+        ))
         list(map(lambda x: x.reset(), available_backends))
 
     # ......................... #
 
     def show_alert_dialog(self):
+        """
+        Show alert dialog if no PSUs found.
+        """
+
         self.dialog = MDDialog(
             text="No PSUs found",
             buttons=[
@@ -91,6 +98,10 @@ class App(MDApp):
     # ......................... #
 
     def dialog_close(self, *args):
+        """
+        Stop app on alert dialog dismiss.
+        """
+        
         self.dialog.dismiss(force=True)
         self.stop()
 

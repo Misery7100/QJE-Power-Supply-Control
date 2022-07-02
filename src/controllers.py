@@ -1,19 +1,8 @@
-import os
-import yaml
-
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.button import MDFillRoundFlatButton, MDIconButton
 from kivymd.uix.label import MDLabel
-from pathlib import Path
 
-from .utils import dotdict
-
-# ------------------------- #
-
-BASE_DIR = Path(__file__).resolve().parent
-
-with open(os.path.join(BASE_DIR, 'yml/style.yml'), 'r') as stream:
-    style = dotdict(yaml.load(stream, Loader=yaml.Loader))
+from src.utils import *
 
 # ------------------------- #
 

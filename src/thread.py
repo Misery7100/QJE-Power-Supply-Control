@@ -1,25 +1,12 @@
-import os
 import time
-import yaml
 
 from serial import Serial
 from threading import Thread
 
-from pathlib import Path
 from serial import Serial
 
-from src.utils import dotdict
+from src.utils import *
 from src.serial import parse_ports
-
-# ------------------------- #
-
-BASE_DIR = Path(__file__).resolve().parent
-
-with open(os.path.join(BASE_DIR, 'yml/qje_protocol.yml'), 'r') as stream:
-    qje = dotdict(yaml.load(stream, Loader=yaml.Loader))
-
-with open(os.path.join(BASE_DIR, 'yml/threads.yml'), 'r') as stream:
-    cfg = dotdict(yaml.load(stream, Loader=yaml.Loader))
 
 # ------------------------- #
 
@@ -167,7 +154,7 @@ class SerialMonitor(Thread):
 
             self.backend.update_app_screen()
 
-            time.sleep(1)
+            time.sleep(cfg.timeouts.psu_capture)
     
     # ......................... #
 

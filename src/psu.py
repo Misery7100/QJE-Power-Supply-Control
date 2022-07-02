@@ -1,21 +1,6 @@
-import os
-import time
-import yaml
-
-from pathlib import Path
 from serial import Serial
 
-from src.utils import dotdict
-
-# ------------------------- #
-
-BASE_DIR = Path(__file__).resolve().parent
-
-with open(os.path.join(BASE_DIR, 'yml/qje_protocol.yml'), 'r') as stream:
-    qje = dotdict(yaml.load(stream, Loader=yaml.Loader))
-
-with open(os.path.join(BASE_DIR, 'yml/threads.yml'), 'r') as stream:
-    cfg = dotdict(yaml.load(stream, Loader=yaml.Loader))
+from src.utils import *
 
 # ------------------------- #
 
