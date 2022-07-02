@@ -8,7 +8,8 @@ from threading import Thread
 from pathlib import Path
 from serial import Serial
 
-from .utils import dotdict
+from src.utils import dotdict
+from src.serial import parse_ports
 
 # ------------------------- #
 
@@ -26,9 +27,8 @@ class SerialHalfDuplexV2(Thread): # TODO: fix shit with disabled instances, fix 
 
     def __init__(self, backend, **kwargs) -> None:
 
-        super().__init__(**kwargs)
+        super().__init__(daemon=True, **kwargs)
 
-        self.daemon = True
         self.disconnected = False
         self.paused = False
 
@@ -46,16 +46,6 @@ class SerialHalfDuplexV2(Thread): # TODO: fix shit with disabled instances, fix 
         self.serial.reset_input_buffer()
         self.serial.reset_output_buffer()
     
-    # ......................... #
-
-    def update_voltage(self):
-        pass
-
-    # ......................... #
-
-    def update_current(self):
-        pass
-
     # ......................... #
 
     @property
@@ -126,112 +116,73 @@ class SerialHalfDuplexV2(Thread): # TODO: fix shit with disabled instances, fix 
 
                 except:
                     self.disconnected = True
-                    self.backend.app.disabled = True
+                    self.serial = None
             
             else:
+                pass
                 try:
                     self.serial = Serial(self.backend.port)
                     self.disconnected = False
-                    self.backend.app.disabled = False
 
                 except:
                     pass
 
 # ------------------------- #
-# ------------------------- #
-# ------------------------- #
-# ------------------------- #
-# ------------------------- #
 
-class SerialHalfDuplex(Thread):
+class SerialMonitor(Thread):
 
-    def __init__(self, instance, **kwargs) -> None:
+    def __init__(self, backend, **kwargs) -> None:
+        super().__init__(daemon=True, **kwargs)
 
-        super().__init__(**kwargs)
-
-        self.daemon = True
-        self.disconnected = False
-        self.paused = False
-
-        self.instance = instance
+        self.backend = backend
+    
+    # ......................... #
+    
+    def stop(self):
+        self._stop_event.set()
     
     # ......................... #
 
-    def get_status(self):
-        self.instance.serial.reset_input_buffer()
-        self.instance.serial.reset_output_buffer()
-        self.instance.serial.write(f'{qje.get_status}{qje.end_sym}'.encode())
-        self.instance.serial.flush()
-        f = self.instance.serial.read(2)
-        self.instance.serial.flush()
-        self.instance.serial.reset_input_buffer()
-        self.instance.serial.reset_output_buffer()
-        f = f.decode()
+    def check_ports(self):
+        self.available = set()
+        ports = parse_ports()
 
-        return f
-
-    # ......................... #
-
-    def update_voltage(self):
-        pass
-
-    # ......................... #
-
-    def update_current(self):
-        pass
-
-    # ......................... #
-
-    def update_constant_indicators(self):
-
-        f = self.get_status()
-
-        if f[0] == '0':
-            self.instance.v_ctrl.const_indicator.indicator_off()
-            self.instance.c_ctrl.const_indicator.indicator_on()
-        
-        else:
-            self.instance.v_ctrl.const_indicator.indicator_on()
-            self.instance.c_ctrl.const_indicator.indicator_off()
-
+        for port in ports:
+            if port not in self.available:
+                self.available.add(port)
+    
     # ......................... #
 
     def run(self):
-        while 1:
-            time.sleep(0.05) # TODO: move to threads params
+        while True:
+            self.check_ports()
+            disconnected = self.working.difference(self.available)
+            new = self.available.difference(self.working)
 
-            if self.instance.serial and not self.disconnected:
-                try:
-                    self.instance.serial.inWaiting()
-
-                    # update voltage
-                    if not self.paused and self.instance.output_status:
-                        print('I`m here')
-                        try:
-                            _value = self.instance.v_ctrl.get()
-                            print('I`m here 2')
-                            value = _value[:-1].decode()
-                            print(f'{value=}')
-
-                        except:
-                            pass
-
-                        time.sleep(0.1)
-
-                    if not self.paused and self.instance.output_status:
-                        self.update_constant_indicators()
-
-                except:
-                    self.disconnected = True
-                    self.instance.disabled = True
+            for p in disconnected:
+                self.working.remove(p)
             
-            else:
-                try:
-                    self.instance.serial = Serial(self.instance.port)
-                    self.disconnected = False
-                    self.instance.disabled = False
+            for p in new:
+                self.working.add(p)
 
-                except:
-                    pass
+            self.backend.update_app_screen()
 
-# ------------------------- #
+            time.sleep(1)
+    
+    # ......................... #
+
+    @property
+    def available(self):
+        return self.backend.available
+    
+    @available.setter
+    def available(self ,value):
+        self.backend.available = value
+    
+    @property
+    def working(self):
+        return self.backend.working
+    
+    @working.setter
+    def working(self ,value):
+        self.backend.working = value

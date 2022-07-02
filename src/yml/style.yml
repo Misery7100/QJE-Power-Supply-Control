@@ -26,5 +26,11 @@ output_btn:
   text_color: '#111111'
   background_off: "#787878"
   background_on: "#ff8400"
+  disconnect: "#262626"
+  text_color_disconnect: "#343434"
   line_color: "#434343"
   line_width: 3
+
+psu_widget:
+  text_color: "#dcdcdc"
+  text_color_disabled: "#262626"

@@ -3,11 +3,15 @@ import time
 import yaml
 
 from functools import partial
+from kivy.core.window import Window
+from kivymd.uix.boxlayout import MDBoxLayout
 from pathlib import Path
 from serial import Serial
 
-from .thread import SerialHalfDuplexV2
-from .utils import dotdict
+from src.supply import *
+from src.psu import PSU
+from src.thread import SerialHalfDuplexV2, SerialMonitor
+from src.utils import dotdict
 
 # ------------------------- #
 
@@ -24,20 +28,20 @@ with open(os.path.join(BASE_DIR, 'yml/style.yml'), 'r') as stream:
 
 # ------------------------- #
 
-class Backend: # TODO: fix shit with disabled instances, fix thread (lost connection etc)
-
-    max_voltage = 30.00
-    max_current = 3.000
+class InstanceBackend(PSU):
 
     # ......................... #
 
-    def __init__(self, app: object, port: str, **kwargs):
-        self.register(app, port)
+    def __init__(self, app: object, port: str):
+
+        super().__init__(port=port)
+
+        self.register(app)
         self.bind()
     
     # ......................... #
 
-    def register(self, app: object, port: str):
+    def register(self, app: object):
 
         self.output_enabled = 0
         self._voltage = None
@@ -47,21 +51,33 @@ class Backend: # TODO: fix shit with disabled instances, fix thread (lost connec
         self.output_button = self.app.output_button
         self.voltage_control = self.app.v_ctrl
         self.current_control = self.app.c_ctrl
-        self.port = port
-        self.serial = Serial(self.port, timeout=0.2)
         self.thread = SerialHalfDuplexV2(backend=self)
 
-        self.app.title.text = self.port
-        self.app.title.disabled = False
-
-        self.voltage_control.enable_digits()
-        self.current_control.enable_digits()
-        self.output_button.md_bg_color = style.output_btn.background_off
-
+        self.enable_ui()
         self.reset() # reset output, current and voltage
         self.update_constant_indicators() # update cinds on init
         self.thread.start()
     
+    # ......................... #
+
+    def disable_ui(self):
+        
+        self.app.title.text = 'Disconnected'
+        self.app.title.text_color = style.psu_widget.text_color_disabled
+        self.voltage_control.disable_digits()
+        self.current_control.disable_digits()
+        self.output_button.set_disconnected()
+
+    # ......................... #
+
+    def enable_ui(self):
+        
+        self.app.title.text = self.port
+        self.app.title.text_color = style.psu_widget.text_color
+        self.voltage_control.enable_digits()
+        self.current_control.enable_digits()
+        self.output_button.set_connected()
+
     # ......................... #
 
     def reset(self):
@@ -94,26 +110,28 @@ class Backend: # TODO: fix shit with disabled instances, fix thread (lost connec
 
     def get_status(self, *args):
 
-        self.thread.pause() # reset buffer is here
+        if self.serial:
 
-        self.serial.write(f'{qje.get_status}{qje.end_sym}'.encode())
-        self.serial.flush()
+            self.thread.pause() # reset buffer is here
 
-        f = self.serial.readline().decode().strip()
-        self.thread.resume()
+            self.write(qje.get_status)
+            f = self.read()
+
+            self.thread.resume()
 
         return f
     
     # ......................... #
 
     def get_name(self, *args):
-        self.thread.pause() # reset buffer is here
 
-        self.serial.write(f'{qje.get_name}{qje.end_sym}'.encode())
-        self.serial.flush()
+        if self.serial:
+            self.thread.pause() # reset buffer is here
 
-        f = self.serial.readline().decode().strip()
-        self.thread.resume()
+            self.serial.write(qje.get_name)
+            f = self.read()
+
+            self.thread.resume()
 
         return f
     
@@ -121,15 +139,17 @@ class Backend: # TODO: fix shit with disabled instances, fix thread (lost connec
 
     def update_constant_indicators(self, *args):
 
-        f = self.get_status()
+        if self.serial:
 
-        if f[0] == '0':
-            self.voltage_control.const_indicator.indicator_off()
-            self.current_control.const_indicator.indicator_on()
-        
-        else:
-            self.voltage_control.const_indicator.indicator_on()
-            self.current_control.const_indicator.indicator_off()
+            f = self.get_status()
+
+            if f[0] == '0':
+                self.voltage_control.const_indicator.indicator_off()
+                self.current_control.const_indicator.indicator_on()
+            
+            else:
+                self.voltage_control.const_indicator.indicator_on()
+                self.current_control.const_indicator.indicator_off()
     
     # ......................... #
 
@@ -137,44 +157,48 @@ class Backend: # TODO: fix shit with disabled instances, fix thread (lost connec
 
         #! sometimes value missed
 
-        self.thread.pause()
+        if self.serial:
+            self.thread.pause()
 
-        self.serial.write(f'{qje.set_output}{value}{qje.end_sym}'.encode())
-        self.serial.flush()
-        time.sleep(cfg.timeouts.output_while)
+            self.write(f'{qje.set_output}{value}')
+            time.sleep(cfg.timeouts.output_while)
 
-        # status = self.get_status() # reset buffer is here
+            # status = self.get_status() # reset buffer is here
 
-        # while status[1] != str(value):
+            # while status[1] != str(value):
 
-        #     self.serial.write(f'{qje.set_output}{value}{qje.end_sym}'.encode())
-        #     self.serial.flush()
-        #     time.sleep(cfg.timeouts.output_while)
-        #     status = self.get_status()
-        #     time.sleep(cfg.timeouts.output_while)
-        
-        self.thread.resume()
+            #     self.serial.write(f'{qje.set_output}{value}{qje.end_sym}'.encode())
+            #     self.serial.flush()
+            #     time.sleep(cfg.timeouts.output_while)
+            #     status = self.get_status()
+            #     time.sleep(cfg.timeouts.output_while)
+            
+            self.thread.resume()
     
     # ......................... #
 
     def toggle_output(self, *args):
 
-        self.output_enabled = (self.output_enabled + 1) % 2
-        self.set_output_while(self.output_enabled)
+        if not self.output_button.disconnect and self.serial:
 
-        if not self.output_enabled:
-            self.voltage_control.set_value(self._voltage)
-            self.current_control.set_value(self._current)
+            self.output_enabled = (self.output_enabled + 1) % 2
+            self.set_output_while(self.output_enabled)
+
+            if not self.output_enabled:
+                self.voltage_control.set_value(self._voltage)
+                self.current_control.set_value(self._current)
     
     # ......................... #
 
     def update_voltage(self, delta, *args):
-        self.voltage = float(self._voltage) + delta
+        if self.serial:
+            self.voltage = float(self._voltage) + delta
     
     # ......................... #
 
     def update_current(self, delta, *args):
-        self.current = float(self._current) + delta
+        if self.serial:
+            self.current = float(self._current) + delta
 
     # ......................... #
 
@@ -201,48 +225,36 @@ class Backend: # TODO: fix shit with disabled instances, fix thread (lost connec
     @voltage.setter
     def voltage(self, value):
 
-        value = float(value)
-        value = min(max(0, value), self.max_voltage)
-        value = self.voltage_float_to_str(value)
+        if self.serial:
 
-        if not self.output_enabled:
-            self.voltage_control.set_value(value)
+            value = float(value)
+            value = min(max(0, value), self.max_voltage)
+            value = self.voltage_float_to_str(value)
 
-        self._voltage = value
+            if not self.output_enabled:
+                self.voltage_control.set_value(value)
 
-        self.thread.pause() # reset buffer is here
+            self._voltage = value
 
-        self.serial.write(f'{qje.voltage_set}{value}{qje.end_sym}'.encode())
-        self.serial.flush()
-        time.sleep(cfg.timeouts.global_thread)
+            self.thread.pause() # reset buffer is here
 
-        self.thread.resume()
+            self.write(f'{qje.voltage_set}{value}')
+            time.sleep(cfg.timeouts.global_thread)
+
+            self.thread.resume()
     
     @voltage.getter
     def voltage(self):
 
-        self.serial.reset_output_buffer()
-        self.serial.reset_input_buffer()
-        self.serial.write(f'{qje.voltage_get}{qje.end_sym}'.encode())
-        self.serial.flush()
+        if self.serial:
 
-        #sym = self.serial.read().decode()
+            self.write(qje.voltage_get)
+            f = self.read()
 
-        # while sym == "\\n":
-        #     sym = self.serial.read().decode()
-        #     self.serial.flush()
-        #     print(sym)
+            if self.output_enabled:
+                self.voltage_control.set_value(f)
 
-        f = self.serial.readline().decode().strip()
-
-        #self.serial.flush()
-
-        #self._voltage = f
-
-        if self.output_enabled:
-            self.voltage_control.set_value(f)
-
-        return self._voltage
+            return self._voltage
     
     # ......................... #
 
@@ -253,40 +265,131 @@ class Backend: # TODO: fix shit with disabled instances, fix thread (lost connec
     @current.setter
     def current(self, value):
 
-        value = float(value)
-        value = min(max(0, value), self.max_current)
-        value = self.current_float_to_str(value)
+        if self.serial:
 
-        if not self.output_enabled:
-            self.current_control.set_value(value)
+            value = float(value)
+            value = min(max(0, value), self.max_current)
+            value = self.current_float_to_str(value)
 
-        self._current = value
+            if not self.output_enabled:
+                self.current_control.set_value(value)
 
-        self.thread.pause() # reset buffer is here
+            self._current = value
 
-        self.serial.write(f'{qje.current_set}{value}{qje.end_sym}'.encode())
-        self.serial.flush()
-        time.sleep(cfg.timeouts.global_thread)
+            self.thread.pause() # reset buffer is here
 
-        self.thread.resume()
+            self.write(f'{qje.current_set}{value}')
+            time.sleep(cfg.timeouts.global_thread)
+
+            self.thread.resume()
     
     @current.getter
     def current(self):
 
-        self.serial.reset_input_buffer() # ?
-        self.serial.reset_output_buffer() # ?
+        if self.serial:
 
-        self.serial.write(f'{qje.current_get}{qje.end_sym}'.encode())
-        self.serial.flush()
+            self.write(qje.current_get)
+            f = self.read()
 
-        f = self.serial.readline().decode().strip()
+            if self.output_enabled:
+                self.current_control.set_value(f)
 
-        #self._current = f
+            return self._current
 
-        if self.output_enabled:
-            self.current_control.set_value(f)
+# ------------------------- #
 
-        return self._current
+class AppBackend:
+    
+    def __init__(self, app) -> None:
+
+        self.available = set()
+        self.working = set()
+        
+        self.app = app
+        self.thread = SerialMonitor(backend=self)
     
     # ......................... #
 
+    def start(self):
+        self.thread.start()
+    
+    # ......................... #
+
+    def check_initial_connection(self):
+
+        self.thread.check_ports()
+        bad_ports = set()
+
+        if self.available:
+            for port in self.available:
+
+                psu = PSU(port=port, timeout=0.5)
+                psu.write(qje.get_status)
+                f = psu.read()
+                
+                if not f:
+                    bad_ports.add(port)
+                    psu.serial.close()
+        
+        self.available = self.available.difference(bad_ports)
+        
+        if self.available: 
+            return True
+
+        else:
+             return False
+            
+    
+    # ......................... #
+
+    def build_app_screen(self, num_cols: int = 3):
+
+        available = list(self.available)
+
+        for port in available:
+            ctrl = PowerSupplyWidget(
+                    height=350, #! hardcoded shit
+                    width=280,  #! hardcoded shit
+                    size_hint=(None, None)
+                )
+            self.psu_instances[port] = ctrl
+            bnd = InstanceBackend(self.psu_instances[port], port=port)
+            self.psu_backends[port] = bnd
+
+        num_rows = 0
+        
+        for i in range(0, len(self.psu_instances), num_cols):
+
+            row = MDBoxLayout(orientation='horizontal')
+            row.spacing = 3
+            num_rows += 1
+
+            for j in range(num_cols):
+                if i + j < len(self.psu_instances):
+                    row.add_widget(self.psu_instances[available[i + j]])
+
+            self.app.grid.add_widget(row)
+        
+        self.app.screen.add_widget(self.app.grid)
+        Window.size = (280 * min(len(self.psu_instances.keys()), num_cols), 350 * num_rows)
+
+    # ......................... #
+
+    def update_app_screen(self):
+
+        for port in self.psu_instances.keys():
+            if port not in self.working:
+                self.psu_backends[port].disable_ui()
+            else:
+                self.psu_backends[port].enable_ui()
+                self.psu_backends[port].update_constant_indicators()
+    
+    # ......................... #
+
+    @property
+    def psu_instances(self):
+        return self.app.psu_widgets
+    
+    @property
+    def psu_backends(self):
+        return self.app.backends

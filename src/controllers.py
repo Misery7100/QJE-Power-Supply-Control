@@ -1,24 +1,9 @@
 import os
-from re import L
-import serial.tools.list_ports as list_ports
-import time
 import yaml
 
-from kivy.properties import ObjectProperty
-from kivy.lang import Builder
-from kivy.clock import Clock
-from kivy.metrics import dp
-from kivy.uix.effectwidget import EffectWidget, HorizontalBlurEffect, VerticalBlurEffect, FXAAEffect
-from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.button import MDFillRoundFlatButton, MDRoundFlatButton, MDIconButton
-from kivymd.uix.dialog import MDDialog
-from kivymd.uix.textfield import MDTextField
-from kivymd.uix.button import MDFillRoundFlatButton
-from kivymd.uix.dialog import MDDialog
+from kivymd.uix.button import MDFillRoundFlatButton, MDIconButton
 from kivymd.uix.label import MDLabel
-from kivymd.uix.behaviors.magic_behavior import MagicBehavior
-from kivymd.uix.screen import MDScreen
 from pathlib import Path
 
 from .utils import dotdict
@@ -211,21 +196,22 @@ class UniversalCtrlWidget(MDBoxLayout):
 
     def disable_digits(self):
         for bit in self.bits:
-            bit.bit_field.disabled = True
+            bit.bit_field.text_color = "#000000"
             bit.increment.text_color = "#000000"
             bit.decrement.text_color = "#000000"
         
-        self.float_point.disabled = True
+        self.float_point.text_color = "#000000"
+        self.const_indicator.indicator_off()
         
     # ......................... #
 
     def enable_digits(self):
         for bit in self.bits:
-            bit.bit_field.disabled = False
+            bit.bit_field.text_color = style.bit.text_color
             bit.increment.text_color = style.inc_dec_btns.text_color
             bit.decrement.text_color = style.inc_dec_btns.text_color
         
-        self.float_point.disabled = False
+        self.float_point.text_color = style.bit.text_color
 
 # ------------------------- #
 
@@ -265,16 +251,33 @@ class OutputButton(MDFillRoundFlatButton):
         ))
         super().__init__(**kwargs)
 
+        self.colors = [style.output_btn.background_off, style.output_btn.background_on]
         self.md_bg_color = style.output_btn.background_off
         self.value = 0
+        self.disconnect = False
 
         self.bind(on_press=self.toggle_output_color)
 
     # ......................... #
 
     def toggle_output_color(self, *args):
-        colors = [style.output_btn.background_off, style.output_btn.background_on]
-        self.value = (self.value + 1) % 2
-        self.md_bg_color = colors[self.value]
+       
+        if not self.disconnect:
+            self.value = (self.value + 1) % 2
+            self.md_bg_color = self.colors[self.value]
+    
+    # ......................... #
+
+    def set_disconnected(self):
+        self.disconnect = True
+        self.md_bg_color = style.output_btn.disconnect
+        self.text_color = style.output_btn.text_color_disconnect
+    
+    # ......................... #
+
+    def set_connected(self):
+        self.disconnect = False
+        self.md_bg_color = self.colors[self.value]
+        self.text_color = style.output_btn.text_color
 
 # ------------------------- #

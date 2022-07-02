@@ -5,8 +5,7 @@ import yaml
 from pathlib import Path
 from serial import Serial
 
-from .thread import SerialHalfDuplexV2
-from .utils import dotdict
+from src.utils import dotdict
 
 # ------------------------- #
 
@@ -27,7 +26,22 @@ class PSU:
 
     # ......................... #
 
-    def __init__(self, port: str) -> None:
+    def __init__(self, port: str, **kwargs) -> None:
         
         self.port = port
-        self.serial = Serial(self.port, timeout=0.5)
+        self.serial = Serial(self.port, **kwargs)
+    
+    # ......................... #
+
+    def write(self, query):
+        self.serial.reset_input_buffer()
+        self.serial.reset_output_buffer()
+        self.serial.write(f'{query}{qje.end_sym}'.encode())
+        self.serial.flush()
+    
+    # ......................... #
+
+    def read(self):
+        f = self.serial.readline().decode().strip()
+
+        return f
