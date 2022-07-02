@@ -1,7 +1,7 @@
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.label import MDLabel
 
-from src.controllers import *
+from components import *
 
 # ------------------------- #
 

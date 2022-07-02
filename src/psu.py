@@ -5,7 +5,11 @@ from src.utils import *
 # ------------------------- #
 
 class PSU:
+    """
+    QJE-like PSU control with serial. 
+    """
 
+    # default values for QJ3003P and QJ3005P
     max_voltage = 30.00
     max_current = 3.000
 
@@ -18,7 +22,14 @@ class PSU:
     
     # ......................... #
 
-    def write(self, query):
+    def write(self, query: str):
+        """
+        _summary_
+
+        Args:
+            query (str): as
+        """
+
         self.serial.reset_input_buffer()
         self.serial.reset_output_buffer()
         self.serial.write(f'{query}{qje.end_sym}'.encode())

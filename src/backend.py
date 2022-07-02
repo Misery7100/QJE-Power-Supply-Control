@@ -145,16 +145,6 @@ class InstanceBackend(PSU):
 
             self.write(f'{qje.set_output}{value}')
             time.sleep(cfg.timeouts.output_while)
-
-            # status = self.get_status() # reset buffer is here
-
-            # while status[1] != str(value):
-
-            #     self.serial.write(f'{qje.set_output}{value}{qje.end_sym}'.encode())
-            #     self.serial.flush()
-            #     time.sleep(cfg.timeouts.output_while)
-            #     status = self.get_status()
-            #     time.sleep(cfg.timeouts.output_while)
             
             self.thread.resume()
     

@@ -3,23 +3,27 @@ bit:
   font_size: 72dp
   font_family: DS-Digi
   text_color: '#73ff38'
-
-# increment and decrement buttons for bit
-inc_dec_btns:
-  text_color: '#4fa22c'
+  spacing: 10
+  padding: 5
+  inc_dec_btns_text_color: '#4fa22c'
+  disabled: '#000000'
 
 # constant C.V/C.C indicator
 const_indicator:
-  indicator_color_on: '#ff2a26'
-  indicator_color_off: '#010101'
-  indicator_size: 16dp
+  lamp_color_on: '#ff2a26'
+  lamp_color_off: '#010101'
+  lamp_size: 16dp
   text_color: '#ffffff'
   font_size: 14dp
+  spacing: 10
+  padding: 5
 
 # unit label V/A
 unit_indicator:
   text_color: '#ffffff'
   font_size: 20dp
+  spacing: 10
+  padding: 5
 
 # value control template
 universal_ctrl:
