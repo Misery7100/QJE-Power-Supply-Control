@@ -7,8 +7,9 @@ from pathlib import Path
 # ------------------------- #
 
 class dotdict(dict):
-
-    """dot.notation access to dictionary attributes"""
+    """
+    Dict with dot notation access to dictionary elements.
+    """
     
     def __getattr__(*args):
         val = dict.get(*args)
@@ -21,6 +22,8 @@ class dotdict(dict):
 
 BASE_DIR = Path(__file__).resolve().parent
 
+# load configuration files
+
 with open(os.path.join(BASE_DIR, 'yml/qje_protocol.yml'), 'r') as stream:
     qje = dotdict(yaml.load(stream, Loader=yaml.Loader))
 
@@ -29,6 +32,8 @@ with open(os.path.join(BASE_DIR, 'yml/threads.yml'), 'r') as stream:
 
 with open(os.path.join(BASE_DIR, 'yml/style.yml'), 'r') as stream:
     style = dotdict(yaml.load(stream, Loader=yaml.Loader))
+
+# register digital-like font for kivy
 
 LabelBase.register(
     name='DS-Digi',

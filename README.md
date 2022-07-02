@@ -17,7 +17,13 @@ You should connect all PSUs you need before the app run, because connection on t
 
 - Control multiple PSUs at the same time;
 - Disconnection handling;
+- Reset connected PSUs on close and on startup;
 - UI similar to real PSU appearance.
+
+## Bugs
+
+- Digit controls overshoot due PSU UART hardware implementation;
+- Output button overshoot.
 
 ## Protocol
 

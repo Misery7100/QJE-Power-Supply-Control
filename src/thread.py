@@ -11,8 +11,11 @@ from src.serial import parse_ports
 # ------------------------- #
 
 class SerialHalfDuplexV2(Thread):
+    """
+    Instance daemon thread to make communication with UI and PSU.
+    """
 
-    def __init__(self, backend, **kwargs) -> None:
+    def __init__(self, backend: object, **kwargs) -> None:
 
         super().__init__(daemon=True, **kwargs)
 
@@ -24,14 +27,20 @@ class SerialHalfDuplexV2(Thread):
     # ......................... #
 
     def resume(self):
+        """
+        Resume the thread artificially.
+        """
+
         self.paused = False
         
     # ......................... #
 
     def pause(self):
+        """
+        Pause the thread artificially.
+        """
+
         self.paused = True
-        self.serial.reset_input_buffer()
-        self.serial.reset_output_buffer()
     
     # ......................... #
 
@@ -64,6 +73,10 @@ class SerialHalfDuplexV2(Thread):
     # ......................... #
 
     def run(self):
+        """
+        Main thread loop.
+        """
+        
         while True:
             time.sleep(cfg.timeouts.global_thread)
 
@@ -78,7 +91,8 @@ class SerialHalfDuplexV2(Thread):
 
                         except:
                             pass
-                            
+                        
+                        # loop delay x1
                         time.sleep(cfg.timeouts.in_step)
 
                     # update current
@@ -88,17 +102,18 @@ class SerialHalfDuplexV2(Thread):
                         
                         except:
                             pass
-                            
+                        
+                        # loop delay x2
                         time.sleep(cfg.timeouts.in_step)
 
-
+                    # update indicators
                     if not self.paused and self.output_enabled:
                         try:
                             self.backend.update_constant_indicators()
-                        
                         except:
                             pass
-                            
+                        
+                        # loop delay x3
                         time.sleep(cfg.timeouts.in_step)
 
                 except:
@@ -117,8 +132,12 @@ class SerialHalfDuplexV2(Thread):
 # ------------------------- #
 
 class SerialMonitor(Thread):
+    """
+    App monitoring daemon thread.
+    """
 
-    def __init__(self, backend, **kwargs) -> None:
+    def __init__(self, backend: object, **kwargs) -> None:
+
         super().__init__(daemon=True, **kwargs)
 
         self.backend = backend
@@ -126,11 +145,19 @@ class SerialMonitor(Thread):
     # ......................... #
     
     def stop(self):
+        """
+        Stop instance polling.
+        """
+
         self._stop_event.set()
     
     # ......................... #
 
     def check_ports(self):
+        """
+        Update available ports set with pre-reset.
+        """
+
         self.available = set()
         ports = parse_ports()
 
@@ -141,19 +168,29 @@ class SerialMonitor(Thread):
     # ......................... #
 
     def run(self):
+        """
+        Main thread loop.
+        """
+
         while True:
+
+            # check and update ports
             self.check_ports()
             disconnected = self.working.difference(self.available)
             new = self.available.difference(self.working)
 
+            # remove disconnected instances
             for p in disconnected:
                 self.working.remove(p)
             
+            # add new instances (not work because on-fly connection isn't implemented)
             for p in new:
                 self.working.add(p)
 
+            # update app screen according to the working ports set
             self.backend.update_app_screen()
 
+            # loop delay
             time.sleep(cfg.timeouts.psu_capture)
     
     # ......................... #

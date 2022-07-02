@@ -11,7 +11,7 @@ class UnitIndicator(MDBoxLayout):
     Basic unit indicator for voltage/current controllers.
     """
 
-    def __init__(self, label='A', **kwargs):
+    def __init__(self, label: str = 'A', **kwargs):
 
         super().__init__(**kwargs)
 
@@ -48,7 +48,7 @@ class ConstantIndicator(MDBoxLayout):
     Basic indicator of constant voltage/current.
     """
 
-    def __init__(self, label='C.#', **kwargs):
+    def __init__(self, label: str = 'C.#', **kwargs):
 
         super().__init__(**kwargs)
 
@@ -269,6 +269,7 @@ class CurrentCtrlWidget(UniversalCtrlWidget):
     """
 
     def __init__(self, **kwargs):
+        
         kwargs.update(dict(
             point_pos=1,
             const_indicator_label="C.C", 
@@ -285,6 +286,7 @@ class VoltageCtrlWidget(UniversalCtrlWidget):
     """
 
     def __init__(self, **kwargs):
+
         kwargs.update(dict(
             point_pos=2,
             const_indicator_label="C.V", 
@@ -300,6 +302,7 @@ class OutputButton(MDFillRoundFlatButton):
     """
 
     def __init__(self, **kwargs):
+
         kwargs.update(dict(
             text='OUTPUT', 
             size_hint_y=0.1,
@@ -352,5 +355,3 @@ class OutputButton(MDFillRoundFlatButton):
         self.disconnect = False
         self.md_bg_color = self.colors[self.value]
         self.text_color = style.output_btn.text_color
-
-# ------------------------- #

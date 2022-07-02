@@ -1,7 +1,7 @@
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.label import MDLabel
 
-from components import *
+from src.components import *
 
 # ------------------------- #
 
@@ -11,6 +11,7 @@ class PowerSupplyWidget(MDBoxLayout):
     """
 
     def __init__(self, **kwargs):
+        
         super().__init__(**kwargs)
 
         self.orientation = 'vertical'

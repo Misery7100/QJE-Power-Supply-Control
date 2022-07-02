@@ -1,9 +1,18 @@
 import re
+
+from typing import List
+
 import serial.tools.list_ports as list_ports
 
 # ------------------------- #
 
-def parse_ports():
+def parse_ports() -> List[str]:
+    """
+    Check available comports and filter it with matches.
+
+    Returns:
+        List[str]: list of available serial ports
+    """
 
     match1 = 'Silicon Labs'
     match2 = 'USB to UART Bridge'

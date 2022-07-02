@@ -6,12 +6,12 @@ from src.utils import *
 
 class PSU:
     """
-    QJE-like PSU control with serial. 
+    QJE-like PSU control via comport. 
     """
 
     # default values for QJ3003P and QJ3005P
-    max_voltage = 30.00
-    max_current = 3.000
+    max_voltage = 30.00 # V
+    max_current = 3.000 # A
 
     # ......................... #
 
@@ -24,10 +24,10 @@ class PSU:
 
     def write(self, query: str):
         """
-        _summary_
+        Write to PSU's comport.
 
         Args:
-            query (str): as
+            query (str): query to write
         """
 
         self.serial.reset_input_buffer()
@@ -37,7 +37,16 @@ class PSU:
     
     # ......................... #
 
-    def read(self):
-        f = self.serial.readline().decode().strip()
+    def read(self) -> str:
+        """
+        Read value from PSU's comport.
 
-        return f
+        Returns:
+            str: read line from the assigned port
+        """
+
+        try:
+            f = self.serial.readline().decode().strip()
+            return f
+        except:
+            return ''
