@@ -15,7 +15,7 @@ class PowerSupplyWidget(MDBoxLayout):
         self.ctrl_layout = MDBoxLayout(orientation='vertical')
         self.ctrl_layout.padding = 10
         self.ctrl_layout.spacing = 10
-        self.ctrl_layout.md_bg_color = (69 / 255, 69 / 255, 69 / 255, 1) #! hardcoded shit
+        self.ctrl_layout.md_bg_color = (69 / 255, 69 / 255, 69 / 255, 1) #! hardcoded
 
         self.title = MDLabel(
                 text='No PSU', 

@@ -43,8 +43,8 @@ class App(MDApp):
 
         self.screen = MDScreen()
         self.grid = MDBoxLayout(orientation='vertical')
-        self.grid.spacing = 3 #! hardcoded shit
-        self.grid.md_bg_color = (35 / 255, 35 / 255, 35 / 255, 1) #! hardcoded shit
+        self.grid.spacing = 3 #! hardcoded
+        self.grid.md_bg_color = (35 / 255, 35 / 255, 35 / 255, 1) #! hardcoded
 
         self.app_backend = AppBackend(app=self)
         self.psu_widgets = dict()
@@ -83,9 +83,7 @@ class App(MDApp):
                 MDFillRoundFlatButton(
                     text="Close",
                     on_release=self.dialog_close
-                    #theme_text_color="Custom",
-                    #text_color=self.theme_cls.primary_color,
-                ),
+                )
             ]
         )
         self.dialog.open()

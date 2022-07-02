@@ -112,7 +112,7 @@ class InstanceBackend(PSU):
 
         if self.serial:
 
-            self.thread.pause() # reset buffer is here
+            self.thread.pause()
 
             self.write(qje.get_status)
             f = self.read()
@@ -126,7 +126,7 @@ class InstanceBackend(PSU):
     def get_name(self, *args):
 
         if self.serial:
-            self.thread.pause() # reset buffer is here
+            self.thread.pause()
 
             self.serial.write(qje.get_name)
             f = self.read()
@@ -155,7 +155,7 @@ class InstanceBackend(PSU):
 
     def set_output_while(self, value, *args):
 
-        #! sometimes value missed
+        #! sometimes value is missed
 
         if self.serial:
             self.thread.pause()
@@ -276,7 +276,7 @@ class InstanceBackend(PSU):
 
             self._current = value
 
-            self.thread.pause() # reset buffer is here
+            self.thread.pause()
 
             self.write(f'{qje.current_set}{value}')
             time.sleep(cfg.timeouts.global_thread)
@@ -348,8 +348,8 @@ class AppBackend:
 
         for port in available:
             ctrl = PowerSupplyWidget(
-                    height=350, #! hardcoded shit
-                    width=280,  #! hardcoded shit
+                    height=350, #! hardcoded
+                    width=280,  #! hardcoded
                     size_hint=(None, None)
                 )
             self.psu_instances[port] = ctrl
